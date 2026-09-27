@@ -1,0 +1,42 @@
+name: Publish NMMH 1.5.3 RC
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - release-assets/Nocturne-MSFS-Memory-Helper-1.5.3-RC.zip
+      - RELEASE_NOTES_1.5.3_RC.md
+      - .github/workflows/publish-1.5.3-rc.yml
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Verify release hashes
+        shell: bash
+        run: |
+          echo "e573f7de740ade4fd09298c04d70c9faf2b976bf8e5f147a581284134dfb061b  release-assets/Nocturne-MSFS-Memory-Helper-1.5.3-RC.zip" | sha256sum --check -
+          test "$(unzip -p release-assets/Nocturne-MSFS-Memory-Helper-1.5.3-RC.zip 'Nocturne-MSFS-Memory-Helper-1.5.3-RC/Nocturne-MSFS-Memory-Helper-1.5.3-RC.exe' | sha256sum | cut -d' ' -f1)" = "6b400ff8c66dc3b763cea65fd11d2417691198be8154e0de9cfbb34ac94edf0a"
+
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if gh release view v1.5.3-rc >/dev/null 2>&1; then
+            echo "Release v1.5.3-rc already exists."
+          else
+            gh release create v1.5.3-rc \
+              release-assets/Nocturne-MSFS-Memory-Helper-1.5.3-RC.zip \
+              --title "Nocturne MSFS Memory Helper 1.5.3 RC" \
+              --notes-file RELEASE_NOTES_1.5.3_RC.md \
+              --prerelease \
+              --target main
+          fi
