@@ -31,7 +31,11 @@ jobs:
         shell: bash
         run: |
           if gh release view v1.5.3-rc >/dev/null 2>&1; then
-            echo "Release v1.5.3-rc already exists."
+            gh release edit v1.5.3-rc \
+              --title "Nocturne MSFS Memory Helper 1.5.3 RC" \
+              --notes-file RELEASE_NOTES_1.5.3_RC.md \
+              --prerelease \
+              --target main
           else
             gh release create v1.5.3-rc \
               release-assets/Nocturne-MSFS-Memory-Helper-1.5.3-RC.zip \

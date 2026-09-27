@@ -25,7 +25,7 @@ Read the included `README.txt` before use.
 
 ## Antivirus transparency
 
-This release was compiled locally on Windows using Microsoft's .NET Framework C# compiler. VirusTotal reported three generic heuristic detections from Bkav Pro, McAfee Scanner, and SecureAge. Microsoft Defender and the remaining engines reported the file as clean. The complete source and build script are available in this repository for independent inspection and reproduction.
+This release was compiled locally on Windows using Microsoft's .NET Framework C# compiler. [The VirusTotal report for the published executable](https://www.virustotal.com/gui/file/6b400ff8c66dc3b763cea65fd11d2417691198be8154e0de9cfbb34ac94edf0a) reported three generic heuristic detections from Bkav Pro, McAfee Scanner, and SecureAge. Microsoft Defender and the remaining engines reported the file as clean. The report is tied to the same EXE SHA-256 listed below. The complete source and build script are available in this repository for independent inspection and reproduction.
 
 NMMH legitimately adjusts a Windows process privilege, invokes native system-memory operations, and registers an elevated scheduled worker after user approval. Those capabilities can resemble the static capability profile of a system utility or malicious software to heuristic scanners, even though NMMH does not download payloads, inject into MSFS, or contain PowerShell or VBS components.
 

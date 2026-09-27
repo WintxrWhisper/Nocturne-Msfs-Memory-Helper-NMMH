@@ -6,6 +6,16 @@ It was created to reduce the performance degradation I experience as physical sy
 
 > **Release status:** 1.5.3 RC is a release-candidate investigation tool. It has been extensively tested on my own system, but it has not been tested on every hardware, software, add-on, or streaming configuration.
 
+## Interface
+
+### Status window
+
+![NMMH status window showing live physical-memory information and cleanup controls](docs/images/nmmh-status-window.png)
+
+### Tray controls
+
+![NMMH tray menu showing status, cleanup controls, and interval selection](docs/images/nmmh-tray-controls.png)
+
 ## What NMMH does
 
 Each cleanup performs two complete system-wide passes:
@@ -48,6 +58,8 @@ Cleaning is disabled without a live SimConnect connection. The elevated worker a
 ## Download and use
 
 [Download Nocturne MSFS Memory Helper 1.5.3 RC](https://github.com/WintxrWhisper/Nocturne-Msfs-Memory-Helper-NMMH/releases/download/v1.5.3-rc/Nocturne-MSFS-Memory-Helper-1.5.3-RC.zip), extract the complete folder to a permanent location, and read the included `README.txt` before running NMMH.
+
+The published executable can be checked directly in [its VirusTotal report](https://www.virustotal.com/gui/file/6b400ff8c66dc3b763cea65fd11d2417691198be8154e0de9cfbb34ac94edf0a). That report is tied to the release EXE's SHA-256: `6b400ff8c66dc3b763cea65fd11d2417691198be8154e0de9cfbb34ac94edf0a`.
 
 The first cleanup requests administrator approval once. NMMH then registers its elevated cleanup worker so later cleanups do not produce recurring UAC prompts. Keep the EXE in the same location after authorization because the scheduled tasks point to that exact path.
 
