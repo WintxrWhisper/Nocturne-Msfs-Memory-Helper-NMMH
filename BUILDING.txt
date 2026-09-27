@@ -1,0 +1,17 @@
+BUILDING NMMH 1.5.3 RC
+======================
+
+This source package builds with the C# compiler included with Microsoft's
+.NET Framework 4.8 on Windows 10 or Windows 11. Visual Studio is not required.
+
+  1. Extract this complete source folder.
+  2. Double-click Build-NMMH.cmd.
+  3. Wait for "Build succeeded."
+  4. Find the EXE and ready-to-upload ZIP inside the release folder.
+
+The build script compiles the source directly into one x64 WinForms EXE. It
+does not download dependencies, encode a payload, create a self-extractor or
+bundle any PowerShell/VBS scripts.
+
+If the compiler is missing, enable or repair .NET Framework 4.8 in Windows and
+run Build-NMMH.cmd again.

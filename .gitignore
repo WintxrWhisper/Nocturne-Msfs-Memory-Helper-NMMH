@@ -1,0 +1,9 @@
+/release/
+/testdata/
+/testdata2/
+*.log
+*.pdb
+*.user
+*.suo
+.vs/
+

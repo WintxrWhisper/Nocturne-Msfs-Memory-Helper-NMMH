@@ -1,0 +1,50 @@
+name: Compatibility test report
+description: Share a successful, unsuccessful, or mixed NMMH test result.
+title: "[Test] "
+labels:
+  - test-report
+body:
+  - type: textarea
+    id: system
+    attributes:
+      label: System configuration
+      description: Include CPU, GPU, installed RAM, Windows version, and display resolution.
+    validations:
+      required: true
+  - type: textarea
+    id: flight
+    attributes:
+      label: Flight configuration
+      description: Include aircraft, departure/destination, approximate duration, add-on scenery, plug-ins, and external services.
+    validations:
+      required: true
+  - type: dropdown
+    id: content
+    attributes:
+      label: MSFS world-content configuration
+      options:
+        - Mostly installed locally
+        - Mostly streamed
+        - Mixed
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Results
+      description: Include memory figures before/after, flight phase, visible hitching, performance or frame-pacing changes, and any effect on other applications.
+    validations:
+      required: true
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Overall outcome
+      options:
+        - Improved
+        - No meaningful change
+        - Mixed result
+        - Increased instability
+    validations:
+      required: true
+

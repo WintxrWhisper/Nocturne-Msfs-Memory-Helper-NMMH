@@ -1,0 +1,63 @@
+name: Bug report
+description: Report a reproducible NMMH problem or instability.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        NMMH is an experimental system-memory utility. Save important work and reproduce problems only on a flight or workload you can afford to interrupt.
+  - type: input
+    id: version
+    attributes:
+      label: NMMH version
+      placeholder: 1.5.3 RC
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the problem, what you expected, and whether it happened before, during, or after a cleanup.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Start MSFS and NMMH
+        2. Load ...
+        3. Clean during ...
+        4. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: system
+    attributes:
+      label: System and simulator configuration
+      description: Include Windows version, CPU, GPU, installed RAM, aircraft, add-ons, and whether world content is primarily local or streamed.
+    validations:
+      required: true
+  - type: textarea
+    id: memory
+    attributes:
+      label: Memory observations
+      description: Include physical RAM used/available and any standby, compressed, dedicated-GPU, or shared-GPU figures you recorded before and after cleaning.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant cleanup log
+      description: Paste only the relevant section from %LOCALAPPDATA%\NocturneMemoryCleaner\cleaner.log. Remove personal information first.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: I tested this on a workload I was prepared to interrupt.
+          required: true
+        - label: I removed personal information from logs and screenshots.
+          required: true
+
