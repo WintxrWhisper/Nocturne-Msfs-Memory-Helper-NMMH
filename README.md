@@ -47,7 +47,7 @@ Cleaning is disabled without a live SimConnect connection. The elevated worker a
 
 ## Download and use
 
-Download the newest ZIP from the repository's **Releases** page, extract the complete folder to a permanent location, and read the included `README.txt` before running NMMH.
+[Download Nocturne MSFS Memory Helper 1.5.3 RC](https://github.com/WintxrWhisper/Nocturne-Msfs-Memory-Helper-NMMH/releases/download/v1.5.3-rc/Nocturne-MSFS-Memory-Helper-1.5.3-RC.zip), extract the complete folder to a permanent location, and read the included `README.txt` before running NMMH.
 
 The first cleanup requests administrator approval once. NMMH then registers its elevated cleanup worker so later cleanups do not produce recurring UAC prompts. Keep the EXE in the same location after authorization because the scheduled tasks point to that exact path.
 
@@ -78,4 +78,3 @@ Regular updates and individual support are not guaranteed. If NMMH remains stabl
 ## License
 
 NMMH is released under the [MIT License](LICENSE).
-
