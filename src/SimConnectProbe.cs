@@ -27,6 +27,7 @@ namespace NocturneMemoryHelper
         private bool disposed;
         private long lastReply;
         private string lastError = String.Empty;
+        private string connectionInfo = String.Empty;
 
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -47,6 +48,7 @@ namespace NocturneMemoryHelper
         }
 
         internal string LastError { get { lock (sync) return lastError; } }
+        internal string ConnectionInfo { get { lock (sync) return connectionInfo; } }
         internal bool IsConnected
         {
             get
@@ -99,10 +101,7 @@ namespace NocturneMemoryHelper
                 {
                     try
                     {
-                        // Version fallback always opens a fresh transport.
-                        bool accepted = TryConnection(current, expectedProcess, false);
-                        if (!accepted && !token.IsCancellationRequested)
-                            TryConnection(current, expectedProcess, true);
+                        RunConnection(current, expectedProcess);
                     }
                     catch (Exception ex)
                     {
@@ -118,27 +117,24 @@ namespace NocturneMemoryHelper
             }
         }
 
-        // Returns false only for an explicit version mismatch, never for a missing
-        // server, bad packet, wrong owner, or a nonresponsive connection.
-        private bool TryConnection(CancellationTokenSource current, int expectedProcess, bool legacy)
+        private void RunConnection(CancellationTokenSource current, int expectedProcess)
         {
             CancellationToken token = current.Token;
             using (NamedPipeClientStream pipe = new NamedPipeClientStream(
                 ".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous))
             using (token.Register(delegate { try { pipe.Dispose(); } catch { } }))
             {
-                pipe.Connect(250);
+                pipe.Connect(1000);
                 token.ThrowIfCancellationRequested();
                 if (!verifyOwner(pipe, expectedProcess))
                     throw new IOException("local pipe does not belong to the detected simulator");
 
                 uint sendId = 1;
-                WritePacket(pipe, SimConnectWire.Open(sendId++, legacy), responseTimeout);
-                byte[] open = SimConnectWire.ReadPacket(pipe, responseTimeout);
+                WritePacket(pipe, SimConnectWire.Open(sendId++), responseTimeout);
+                byte[] open = ReadReply(pipe, responseTimeout, "OPEN reply");
                 uint kind = SimConnectWire.UInt32(open, 8);
                 if (kind == 1 && open.Length >= 24 && SimConnectWire.UInt32(open, 12) == 5)
                 {
-                    if (!legacy) return false;
                     throw new IOException("protocol version rejected");
                 }
                 if (kind != 2 || open.Length < 308)
@@ -147,6 +143,14 @@ namespace NocturneMemoryHelper
                 if (!application.StartsWith("SunRise", StringComparison.OrdinalIgnoreCase) &&
                     !application.StartsWith("Microsoft Flight Simulator 2024", StringComparison.OrdinalIgnoreCase))
                     throw new IOException("the server is not MSFS 2024 (" + application + ")");
+                lock (sync)
+                {
+                    if (Object.ReferenceEquals(session, current) && !current.IsCancellationRequested)
+                        connectionInfo = application + ", client protocol 6, server protocol " +
+                            SimConnectWire.UInt32(open, 4) + ", SimConnect " +
+                            SimConnectWire.UInt32(open, 284) + "." + SimConnectWire.UInt32(open, 288) +
+                            "." + SimConnectWire.UInt32(open, 292) + "." + SimConnectWire.UInt32(open, 296);
+                }
 
                 // OPEN alone is not sufficient: require a matching reply to our
                 // own read-only request, including in menus or when paused.
@@ -160,10 +164,12 @@ namespace NocturneMemoryHelper
                     {
                         int remaining = responseTimeout - (int)deadline.ElapsedMilliseconds;
                         if (remaining <= 0) throw new TimeoutException("no SimConnect heartbeat reply");
-                        byte[] response = SimConnectWire.ReadPacket(pipe, remaining);
+                        byte[] response = ReadReply(pipe, remaining, "heartbeat reply");
                         uint id = SimConnectWire.UInt32(response, 8);
                         if (id == 3) throw new IOException("simulator closed the connection");
-                        if (id == 1) throw new IOException("SimConnect reported an exception");
+                        if (id == 1)
+                            throw new IOException("SimConnect exception " +
+                                (response.Length >= 24 ? SimConnectWire.UInt32(response, 12).ToString() : "(truncated)"));
                         if (id == 15 && response.Length >= 284 &&
                             SimConnectWire.UInt32(response, 12) == requestId)
                             replied = true;
@@ -174,7 +180,15 @@ namespace NocturneMemoryHelper
                     if (token.WaitHandle.WaitOne(heartbeatInterval)) break;
                 }
                 SetState(current, false, "waiting for SimConnect");
-                return true;
+            }
+        }
+
+        private static byte[] ReadReply(Stream stream, int timeout, string stage)
+        {
+            try { return SimConnectWire.ReadPacket(stream, timeout); }
+            catch (Exception ex)
+            {
+                throw new IOException(stage + ": " + ex.GetBaseException().Message);
             }
         }
 
@@ -211,6 +225,7 @@ namespace NocturneMemoryHelper
         private void StopSession()
         {
             connected = false;
+            connectionInfo = String.Empty;
             CancellationTokenSource previous = session;
             session = null;
             processId = 0;
@@ -238,7 +253,7 @@ namespace NocturneMemoryHelper
 
     internal static class SimConnectWire
     {
-        private const uint Version = 4;
+        private const uint Version = 6; // MSFS 2024 / SunRise, not FSX (4).
         private const int MaximumPacket = 4096; // Only OPEN and system-state traffic is requested.
 
         internal static uint UInt32(byte[] bytes, int offset)
@@ -270,17 +285,18 @@ namespace NocturneMemoryHelper
             return result;
         }
 
-        internal static byte[] Open(uint sendId, bool legacy)
+        internal static byte[] Open(uint sendId)
         {
             byte[] packet = Packet(296, 0xF0000001, sendId);
             byte[] name = Encoding.ASCII.GetBytes("Nocturne MSFS Memory Helper");
             Buffer.BlockCopy(name, 0, packet, 16, name.Length);
-            // The FSX magic occupies a little-endian 64-bit field.
-            Buffer.BlockCopy(new byte[] { 0, 0, 0, 0, 0, 0x58, 0x53, 0x46 }, 0, packet, 272, 8);
-            PutUInt32(packet, 280, legacy ? 10u : 12u);
-            PutUInt32(packet, 284, legacy ? 0u : 2u);
-            PutUInt32(packet, 288, legacy ? 61259u : 282174u);
-            PutUInt32(packet, 292, legacy ? 0u : 999u);
+            // Reserved uint32, zero byte, three-byte SunRise identifier "RS\0".
+            // This field is not the FSX "XSF" identifier.
+            Buffer.BlockCopy(new byte[] { 0, 0, 0, 0, 0, 0x52, 0x53, 0 }, 0, packet, 272, 8);
+            PutUInt32(packet, 280, 12);
+            PutUInt32(packet, 284, 2);
+            PutUInt32(packet, 288, 282174);
+            PutUInt32(packet, 292, 999);
             return packet;
         }
 
@@ -301,8 +317,12 @@ namespace NocturneMemoryHelper
             uint size = UInt32(header, 0);
             if (size < 12 || size > MaximumPacket)
                 throw new InvalidDataException("invalid SimConnect packet size");
-            if (UInt32(header, 4) != Version)
-                throw new InvalidDataException("unsupported SimConnect wire version");
+            // This is the server's version, not necessarily our advertised
+            // client version. Bound it to the understood header layouts.
+            uint serverVersion = UInt32(header, 4);
+            if (serverVersion < 4 || serverVersion > 6)
+                throw new InvalidDataException("unsupported SimConnect server wire version " +
+                    serverVersion + " (size " + size + ", reply " + UInt32(header, 8) + ")");
             byte[] packet = new byte[(int)size];
             Buffer.BlockCopy(header, 0, packet, 0, 12);
             ReadExact(stream, packet, 12, packet.Length - 12, timeout, deadline);

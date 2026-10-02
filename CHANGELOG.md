@@ -1,7 +1,19 @@
 # Changelog
 
+## 1.5.5 RC
+
+- Fixed the mismatched SimConnect handshake in 1.5.4: send SunRise protocol 6 and its RS identifier, rather than FSX protocol 4 with 2024 version metadata.
+- Corrected receive-version handling so it is not assumed to match an obsolete client version.
+- Removed the FSX fallback; this build targets the MSFS 2024 protocol directly.
+- Added independent literal-byte regression tests and protocol-6 simulated server replies.
+- Log server version, simulator identity, reported SimConnect version, and which receive stage failed.
+- Retained server-PID verification, MSFS 2024 identity checks, heartbeat matching, and disconnect locking.
+- No changes to cleaning operations.
+- Live MSFS confirmation remains pending; automated tests alone do not prove simulator compatibility.
+
 ## 1.5.4 RC
 
+- Known issue: the handshake mixed FSX protocol/identifier with MSFS 2024 version metadata. Live testing failed; use 1.5.5 RC instead.
 - Removed external SimConnect DLL loading, SDK directory searches, and the runtime file picker.
 - Added a direct, read-only client for MSFS 2024's standard local SimConnect pipe.
 - Require the detected simulator's server PID, a valid MSFS 2024 OPEN reply, and matching heartbeat replies before enabling cleaning.

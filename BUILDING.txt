@@ -1,4 +1,4 @@
-BUILDING NMMH 1.5.4 RC
+BUILDING NMMH 1.5.5 RC
 ======================
 
 This source package builds with the C# compiler included with Microsoft's

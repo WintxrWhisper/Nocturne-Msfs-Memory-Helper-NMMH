@@ -375,7 +375,7 @@ namespace NocturneMemoryHelper
             simConnected = simConnect.IsConnected;
             if (simConnected != previouslyConnected)
                 Logger.Write(simConnected
-                    ? "SimConnect connected directly (no external runtime)."
+                    ? "SimConnect connected directly: " + simConnect.ConnectionInfo
                     : "SimConnect disconnected; cleaning locked.");
             string error = simConnect.LastError;
             if (!String.Equals(error, lastSimConnectError, StringComparison.Ordinal))

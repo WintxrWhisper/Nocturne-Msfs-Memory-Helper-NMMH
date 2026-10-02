@@ -1,4 +1,4 @@
-name: Build and test NMMH 1.5.4 RC
+name: Build and test NMMH 1.5.5 RC
 
 on:
   push:
@@ -9,15 +9,15 @@ on:
       - 'Build-NMMH.cmd'
       - 'Test-NMMH.cmd'
       - 'README.txt'
-      - 'RELEASE_NOTES_1.5.4_RC.md'
-      - '.github/workflows/build-release-1.5.4-rc.yml'
+      - 'RELEASE_NOTES_1.5.5_RC.md'
+      - '.github/workflows/build-release-1.5.5-rc.yml'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: nmmh-1.5.4-release
+  group: nmmh-1.5.5-release
   cancel-in-progress: false
 
 jobs:
@@ -39,21 +39,21 @@ jobs:
       - name: Package release and record hashes
         shell: pwsh
         run: |
-          $folder = 'release/Nocturne-MSFS-Memory-Helper-1.5.4-RC'
-          $zip = 'release/Nocturne-MSFS-Memory-Helper-1.5.4-RC.zip'
+          $folder = 'release/Nocturne-MSFS-Memory-Helper-1.5.5-RC'
+          $zip = 'release/Nocturne-MSFS-Memory-Helper-1.5.5-RC.zip'
           Compress-Archive -Path $folder -DestinationPath $zip -Force
-          $exeHash = (Get-FileHash "$folder/Nocturne-MSFS-Memory-Helper-1.5.4-RC.exe" -Algorithm SHA256).Hash.ToLower()
+          $exeHash = (Get-FileHash "$folder/Nocturne-MSFS-Memory-Helper-1.5.5-RC.exe" -Algorithm SHA256).Hash.ToLower()
           $zipHash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
-          "$exeHash  Nocturne-MSFS-Memory-Helper-1.5.4-RC.exe" | Set-Content release/SHA256SUMS.txt -Encoding ascii
-          "$zipHash  Nocturne-MSFS-Memory-Helper-1.5.4-RC.zip" | Add-Content release/SHA256SUMS.txt -Encoding ascii
+          "$exeHash  Nocturne-MSFS-Memory-Helper-1.5.5-RC.exe" | Set-Content release/SHA256SUMS.txt -Encoding ascii
+          "$zipHash  Nocturne-MSFS-Memory-Helper-1.5.5-RC.zip" | Add-Content release/SHA256SUMS.txt -Encoding ascii
           Get-Content release/SHA256SUMS.txt
 
       - name: Save verified build
         uses: actions/upload-artifact@v4
         with:
-          name: NMMH-1.5.4-RC
+          name: NMMH-1.5.5-RC
           path: |
-            release/Nocturne-MSFS-Memory-Helper-1.5.4-RC.zip
+            release/Nocturne-MSFS-Memory-Helper-1.5.5-RC.zip
             release/SHA256SUMS.txt
 
       - name: Publish prerelease
@@ -61,10 +61,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v1.5.4-rc *> $null
+          gh release view v1.5.5-rc *> $null
           if ($LASTEXITCODE -eq 0) {
             Write-Host 'Release already exists; leaving its original assets unchanged.'
           } else {
-            gh release create v1.5.4-rc release/Nocturne-MSFS-Memory-Helper-1.5.4-RC.zip release/SHA256SUMS.txt --title "Nocturne MSFS Memory Helper 1.5.4 RC" --notes-file RELEASE_NOTES_1.5.4_RC.md --prerelease --target ${{ github.sha }}
+            gh release create v1.5.5-rc release/Nocturne-MSFS-Memory-Helper-1.5.5-RC.zip release/SHA256SUMS.txt --title "Nocturne MSFS Memory Helper 1.5.5 RC" --notes-file RELEASE_NOTES_1.5.5_RC.md --prerelease --target ${{ github.sha }}
             if ($LASTEXITCODE -ne 0) { throw 'Release publishing failed.' }
           }

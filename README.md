@@ -4,7 +4,7 @@ Nocturne MSFS Memory Helper—or **NMMH**—is a lightweight Windows tray utilit
 
 It was created to reduce the performance degradation I experience as physical system memory becomes crowded. This pressure can begin during initial simulator startup, while loading into an aircraft, or whenever MSFS loads new scenery, airports, traffic, camera views, or other assets.
 
-> **Release status:** 1.5.4 RC removes the external SimConnect DLL dependency. Its new connection code has automated protocol and local-pipe tests; live MSFS testing of this version still needs confirmation. The unchanged cleanup operations were extensively tested on my own system, not on every hardware, software, add-on, or streaming configuration.
+> **Release status:** 1.5.5 RC corrects the DLL-free SimConnect handshake after 1.5.4 failed live connection testing. No SDK or SimConnect DLL setup is needed. Its new connection code has automated protocol and local-pipe tests; live MSFS testing of this version still needs confirmation. The unchanged cleanup operations were extensively tested on my own system, not on every hardware, software, add-on, or streaming configuration.
 
 ## Interface
 
@@ -57,9 +57,9 @@ Cleaning is disabled without a live SimConnect connection. The elevated worker a
 
 ## Download and use
 
-[Download Nocturne MSFS Memory Helper 1.5.4 RC](https://github.com/WintxrWhisper/Nocturne-Msfs-Memory-Helper-NMMH/releases/download/v1.5.4-rc/Nocturne-MSFS-Memory-Helper-1.5.4-RC.zip), extract the complete folder to a permanent location, and read the included `README.txt` before running NMMH.
+[Download Nocturne MSFS Memory Helper 1.5.5 RC](https://github.com/WintxrWhisper/Nocturne-Msfs-Memory-Helper-NMMH/releases/download/v1.5.5-rc/Nocturne-MSFS-Memory-Helper-1.5.5-RC.zip), extract the complete folder to a permanent location, and read the included `README.txt` before running NMMH.
 
-The **previous 1.5.3 RC executable** can be checked in [its VirusTotal report](https://www.virustotal.com/gui/file/6b400ff8c66dc3b763cea65fd11d2417691198be8154e0de9cfbb34ac94edf0a). That report does **not** cover 1.5.4 RC. It is tied to the old EXE's SHA-256: `6b400ff8c66dc3b763cea65fd11d2417691198be8154e0de9cfbb34ac94edf0a`.
+The **previous 1.5.3 RC executable** can be checked in [its VirusTotal report](https://www.virustotal.com/gui/file/6b400ff8c66dc3b763cea65fd11d2417691198be8154e0de9cfbb34ac94edf0a). That report does **not** cover 1.5.5 RC. It is tied to the old EXE's SHA-256: `6b400ff8c66dc3b763cea65fd11d2417691198be8154e0de9cfbb34ac94edf0a`.
 
 The first cleanup requests administrator approval once. NMMH then registers its elevated cleanup worker so later cleanups do not produce recurring UAC prompts. Keep the EXE in the same location after authorization because the scheduled tasks point to that exact path.
 

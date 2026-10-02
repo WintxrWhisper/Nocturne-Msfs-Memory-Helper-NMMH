@@ -16,22 +16,24 @@ internal static class SimConnectProbeTests
         {
             Test("OPEN wire layout", delegate
             {
-                byte[] open = SimConnectWire.Open(7, false);
+                byte[] open = SimConnectWire.Open(7);
                 Equal(296u, SimConnectWire.UInt32(open, 0));
-                Equal(4u, SimConnectWire.UInt32(open, 4));
+                Equal(6u, SimConnectWire.UInt32(open, 4));
                 Equal(0xF0000001u, SimConnectWire.UInt32(open, 8));
                 Equal(7u, SimConnectWire.UInt32(open, 12));
                 Equal("Nocturne MSFS Memory Helper", SimConnectWire.String(open, 16, 256));
-                Equal(0x46535800u, SimConnectWire.UInt32(open, 276));
+                Equal(0x00535200u, SimConnectWire.UInt32(open, 276));
                 Equal(12u, SimConnectWire.UInt32(open, 280));
                 Equal(282174u, SimConnectWire.UInt32(open, 288));
-                Equal(61259u, SimConnectWire.UInt32(SimConnectWire.Open(1, true), 288));
+                Equal(2u, SimConnectWire.UInt32(open, 284));
+                Equal(999u, SimConnectWire.UInt32(open, 292));
             });
             Test("heartbeat wire layout", delegate
             {
                 byte[] request = SimConnectWire.RequestSimState(9, 13);
                 Equal(276u, SimConnectWire.UInt32(request, 0));
                 Equal(0xF0000035u, SimConnectWire.UInt32(request, 8));
+                Equal(6u, SimConnectWire.UInt32(request, 4));
                 Equal(9u, SimConnectWire.UInt32(request, 12));
                 Equal(13u, SimConnectWire.UInt32(request, 16));
                 Equal("Sim", SimConnectWire.String(request, 20, 256));
@@ -43,6 +45,46 @@ internal static class SimConnectProbeTests
                     Equal(308u, (uint)SimConnectWire.ReadPacket(stream, 1000).Length);
             });
             Test("short packet rejected", delegate { Reject(Header(11, 2), typeof(InvalidDataException)); });
+            Test("SunRise OPEN matches independently specified wire bytes", delegate
+            {
+                // Literal values cross-checked with a current 2024 client, not
+                // generated from the production serializer under test.
+                byte[] packet = SimConnectWire.Open(7);
+                Equal("2801000006000000010000f007000000", Hex(packet, 0, 16));
+                Equal("00000000005253000c000000020000003e4e0400e7030000",
+                    Hex(packet, 272, 24));
+            });
+            Test("2024 heartbeat advertises protocol 6", delegate
+            {
+                byte[] packet = SimConnectWire.RequestSimState(9, 13);
+                Equal("1401000006000000350000f0090000000d00000053696d00",
+                    Hex(packet, 0, 24));
+            });
+            Test("server protocol version is not assumed equal to client version", delegate
+            {
+                for (uint version = 4; version <= 6; version++)
+                {
+                    byte[] packet = OpenReply("SunRise");
+                    Put(packet, 4, version);
+                    using (Stream stream = new FragmentedStream(packet))
+                        Equal(version, SimConnectWire.UInt32(SimConnectWire.ReadPacket(stream, 1000), 4));
+                }
+            });
+            Test("unsupported server version diagnostics include the actual header", delegate
+            {
+                byte[] packet = OpenReply("SunRise");
+                Put(packet, 4, 99);
+                try
+                {
+                    using (Stream stream = new MemoryStream(packet))
+                        SimConnectWire.ReadPacket(stream, 1000);
+                    throw new Exception("Expected invalid server version");
+                }
+                catch (InvalidDataException ex)
+                {
+                    True(ex.Message.Contains("99") && ex.Message.Contains("308") && ex.Message.Contains("reply 2"));
+                }
+            });
             Test("oversized packet rejected", delegate { Reject(Header(0xFFFFFFFF, 2), typeof(InvalidDataException)); });
             Test("wrong protocol rejected", delegate
             {
@@ -83,6 +125,8 @@ internal static class SimConnectProbeTests
                     probe.Update(Process.GetCurrentProcess().Id);
                     Wait(delegate { return probe.IsConnected; });
                     True(server.Requests > 0);
+                    True(probe.ConnectionInfo.Contains("server protocol 6"));
+                    True(probe.ConnectionInfo.Contains("SimConnect 12.2.0.0"));
                     server.ClosePipe();
                     Wait(delegate { return !probe.IsConnected; });
                 }
@@ -223,7 +267,7 @@ internal static class SimConnectProbeTests
                     Wait(delegate { return !probe.IsConnected; });
                 }
             });
-            Test("version mismatch retries on a fresh pipe connection", delegate
+            Test("version mismatch is reported and never unlocks", delegate
             {
                 using (Server server = new Server(delegate(Server s)
                 {
@@ -232,21 +276,13 @@ internal static class SimConnectProbeTests
                     Buffer.BlockCopy(Header(24, 1), 0, rejected, 0, 12);
                     Put(rejected, 12, 5);
                     Send(s.Pipe, rejected);
-                    if (Environment.OSVersion.Platform == PlatformID.Win32NT) s.Pipe.WaitForPipeDrain();
-                    s.Pipe.Disconnect();
-                    s.Pipe.WaitForConnection();
-                    byte[] legacy = SimConnectWire.ReadPacket(s.Pipe, 1000);
-                    Equal(10u, SimConnectWire.UInt32(legacy, 280));
-                    Equal(61259u, SimConnectWire.UInt32(legacy, 288));
-                    Send(s.Pipe, OpenReply("SunRise"));
-                    byte[] request = SimConnectWire.ReadPacket(s.Pipe, 1000);
-                    Send(s.Pipe, StateReply(SimConnectWire.UInt32(request, 16)));
                     Thread.Sleep(300);
                 }))
                 using (SimConnectProbe probe = Probe(server.Name, true))
                 {
                     probe.Update(Process.GetCurrentProcess().Id);
-                    Wait(delegate { return probe.IsConnected; });
+                    Wait(delegate { return probe.LastError.Contains("protocol version rejected"); });
+                    True(!probe.IsConnected);
                 }
             });
             Test("process change requires a fresh verified connection", delegate
@@ -324,6 +360,8 @@ internal static class SimConnectProbeTests
     {
         byte[] open = SimConnectWire.ReadPacket(server.Pipe, 1000);
         Equal(0xF0000001u, SimConnectWire.UInt32(open, 8));
+        Equal(6u, SimConnectWire.UInt32(open, 4));
+        Equal(0x00535200u, SimConnectWire.UInt32(open, 276));
         Send(server.Pipe, OpenReply("SunRise"));
         while (true)
         {
@@ -386,7 +424,7 @@ internal static class SimConnectProbeTests
     private static byte[] Header(uint size, uint id)
     {
         byte[] result = new byte[12];
-        Put(result, 0, size); Put(result, 4, 4); Put(result, 8, id);
+        Put(result, 0, size); Put(result, 4, 6); Put(result, 8, id);
         return result;
     }
     private static byte[] OpenReply(string name)
@@ -395,6 +433,9 @@ internal static class SimConnectProbeTests
         Buffer.BlockCopy(Header(308, 2), 0, packet, 0, 12);
         byte[] application = Encoding.ASCII.GetBytes(name);
         Buffer.BlockCopy(application, 0, packet, 12, application.Length);
+        Put(packet, 268, 12); Put(packet, 272, 2);
+        Put(packet, 276, 282174); Put(packet, 280, 999);
+        Put(packet, 284, 12); Put(packet, 288, 2);
         return packet;
     }
     private static byte[] StateReply(uint requestId)
@@ -432,6 +473,12 @@ internal static class SimConnectProbeTests
     private static void Test(string name, Action action)
     {
         action(); passed++; Console.WriteLine("PASS " + name);
+    }
+    private static string Hex(byte[] bytes, int offset, int length)
+    {
+        StringBuilder result = new StringBuilder();
+        for (int i = offset; i < offset + length; i++) result.Append(bytes[i].ToString("x2"));
+        return result.ToString();
     }
     private static void Wait(Func<bool> condition)
     {

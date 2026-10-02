@@ -15,16 +15,16 @@ if not exist "%CSC%" (
 )
 
 set "RELEASE_ROOT=%~dp0release"
-set "RELEASE_DIR=%RELEASE_ROOT%\Nocturne-MSFS-Memory-Helper-1.5.4-RC"
-set "OUTPUT_EXE=%RELEASE_DIR%\Nocturne-MSFS-Memory-Helper-1.5.4-RC.exe"
-set "OUTPUT_ZIP=%RELEASE_ROOT%\Nocturne-MSFS-Memory-Helper-1.5.4-RC.zip"
+set "RELEASE_DIR=%RELEASE_ROOT%\Nocturne-MSFS-Memory-Helper-1.5.5-RC"
+set "OUTPUT_EXE=%RELEASE_DIR%\Nocturne-MSFS-Memory-Helper-1.5.5-RC.exe"
+set "OUTPUT_ZIP=%RELEASE_ROOT%\Nocturne-MSFS-Memory-Helper-1.5.5-RC.zip"
 
 if exist "%RELEASE_DIR%" rmdir /s /q "%RELEASE_DIR%"
 if exist "%OUTPUT_ZIP%" del /f /q "%OUTPUT_ZIP%"
 mkdir "%RELEASE_DIR%"
 if errorlevel 1 goto :failed
 
-echo Building Nocturne MSFS Memory Helper 1.5.4 RC...
+echo Building Nocturne MSFS Memory Helper 1.5.5 RC...
 "%CSC%" /nologo /target:winexe /platform:x64 /optimize+ /debug- ^
     /win32icon:"%~dp0src\NMMH.ico" ^
     /win32manifest:"%~dp0src\NMMH.manifest" ^
@@ -62,7 +62,7 @@ if errorlevel 1 (
 )
 
 pushd "%RELEASE_ROOT%"
-tar.exe -a -c -f "%OUTPUT_ZIP%" "Nocturne-MSFS-Memory-Helper-1.5.4-RC"
+tar.exe -a -c -f "%OUTPUT_ZIP%" "Nocturne-MSFS-Memory-Helper-1.5.5-RC"
 set "TAR_RESULT=%ERRORLEVEL%"
 popd
 if not "%TAR_RESULT%"=="0" goto :zipfailed

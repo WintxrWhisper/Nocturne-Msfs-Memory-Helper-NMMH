@@ -1,4 +1,4 @@
-NOCTURNE MSFS MEMORY HELPER 1.5.4 RC
+NOCTURNE MSFS MEMORY HELPER 1.5.5 RC
 ===================================
 
 Nocturne MSFS Memory Helper (NMMH) is a lightweight Windows tray utility for
@@ -84,7 +84,8 @@ there are no extracted worker scripts or hidden payloads.
 SIMCONNECT CONNECTION
 ---------------------
 
-NMMH 1.5.4 connects directly to MSFS 2024's local SimConnect service. You do not
+Version 1.5.5 corrects the SimConnect handshake used by 1.5.4.
+NMMH 1.5.5 connects directly to MSFS 2024's local SimConnect service. You do not
 need to install the SDK, find a DLL, or select your simulator installation.
 Steam and Microsoft Store installation paths do not affect this connection.
 
@@ -113,7 +114,7 @@ QUICK START
 
   1. Extract the complete release folder to a permanent location.
   2. Read this README before using the utility.
-  3. Run Nocturne-MSFS-Memory-Helper-1.5.4-RC.exe.
+  3. Run Nocturne-MSFS-Memory-Helper-1.5.5-RC.exe.
   4. Start MSFS 2024 and wait for NMMH to report SimConnect connected.
   5. Use Clean now, or enable automatic cleaning and choose an interval.
 
