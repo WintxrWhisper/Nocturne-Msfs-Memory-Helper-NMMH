@@ -1,0 +1,70 @@
+name: Build and test NMMH 1.5.4 RC
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'Build-NMMH.cmd'
+      - 'Test-NMMH.cmd'
+      - 'README.txt'
+      - 'RELEASE_NOTES_1.5.4_RC.md'
+      - '.github/workflows/build-release-1.5.4-rc.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nmmh-1.5.4-release
+  cancel-in-progress: false
+
+jobs:
+  build-test-release:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Compile and run connection tests
+        shell: cmd
+        run: call Test-NMMH.cmd
+
+      - name: Build executable
+        shell: cmd
+        run: call Build-NMMH.cmd < nul
+
+      - name: Package release and record hashes
+        shell: pwsh
+        run: |
+          $folder = 'release/Nocturne-MSFS-Memory-Helper-1.5.4-RC'
+          $zip = 'release/Nocturne-MSFS-Memory-Helper-1.5.4-RC.zip'
+          Compress-Archive -Path $folder -DestinationPath $zip -Force
+          $exeHash = (Get-FileHash "$folder/Nocturne-MSFS-Memory-Helper-1.5.4-RC.exe" -Algorithm SHA256).Hash.ToLower()
+          $zipHash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+          "$exeHash  Nocturne-MSFS-Memory-Helper-1.5.4-RC.exe" | Set-Content release/SHA256SUMS.txt -Encoding ascii
+          "$zipHash  Nocturne-MSFS-Memory-Helper-1.5.4-RC.zip" | Add-Content release/SHA256SUMS.txt -Encoding ascii
+          Get-Content release/SHA256SUMS.txt
+
+      - name: Save verified build
+        uses: actions/upload-artifact@v4
+        with:
+          name: NMMH-1.5.4-RC
+          path: |
+            release/Nocturne-MSFS-Memory-Helper-1.5.4-RC.zip
+            release/SHA256SUMS.txt
+
+      - name: Publish prerelease
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view v1.5.4-rc *> $null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host 'Release already exists; leaving its original assets unchanged.'
+          } else {
+            gh release create v1.5.4-rc release/Nocturne-MSFS-Memory-Helper-1.5.4-RC.zip release/SHA256SUMS.txt --title "Nocturne MSFS Memory Helper 1.5.4 RC" --notes-file RELEASE_NOTES_1.5.4_RC.md --prerelease --target ${{ github.sha }}
+            if ($LASTEXITCODE -ne 0) { throw 'Release publishing failed.' }
+          }

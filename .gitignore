@@ -6,4 +6,5 @@
 *.user
 *.suo
 .vs/
-
+/tests/bin/
+/tests/*.exe

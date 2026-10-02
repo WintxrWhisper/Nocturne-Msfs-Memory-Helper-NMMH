@@ -11,6 +11,7 @@ namespace NocturneMemoryHelper
     internal sealed class AppSettings
     {
         [DataMember] public int IntervalMinutes = 30;
+        // Retained only for compatibility with old settings; never loaded or used.
         [DataMember] public string SimConnectPath = String.Empty;
         [DataMember] public bool AutomaticCleaningEnabled = false;
         [DataMember] public bool CleanAtLaunch = false;

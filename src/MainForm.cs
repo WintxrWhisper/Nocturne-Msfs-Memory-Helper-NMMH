@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -46,7 +45,7 @@ namespace NocturneMemoryHelper
         private int wipesThisSession;
         private DateTime? nextCleanupAt;
         private bool simConnected;
-        private DateTime nextSimConnectSearchAt = DateTime.MinValue;
+        private string lastSimConnectError = String.Empty;
         private bool hasSeenSimulator;
         private DateTime? simulatorAbsentSince;
         private Icon applicationIcon;
@@ -246,10 +245,6 @@ namespace NocturneMemoryHelper
             menu.Items.Add(closeWithMsfsItem);
             menu.Items.Add(new ToolStripSeparator());
 
-            ToolStripMenuItem selectSimConnectItem = new ToolStripMenuItem("Select SimConnect runtime...");
-            selectSimConnectItem.Click += delegate { SelectSimConnectRuntime(); };
-            menu.Items.Add(selectSimConnectItem);
-
             ToolStripMenuItem logItem = new ToolStripMenuItem("Open cleanup log");
             logItem.Click += delegate { OpenCleanupLog(); };
             menu.Items.Add(logItem);
@@ -374,109 +369,26 @@ namespace NocturneMemoryHelper
 
         private void UpdateSimConnectState()
         {
+            bool previouslyConnected = simConnected;
             using (Process simulator = Program.FindSimulatorProcess())
+                simConnect.Update(simulator == null ? 0 : simulator.Id);
+            simConnected = simConnect.IsConnected;
+            if (simConnected != previouslyConnected)
+                Logger.Write(simConnected
+                    ? "SimConnect connected directly (no external runtime)."
+                    : "SimConnect disconnected; cleaning locked.");
+            string error = simConnect.LastError;
+            if (!String.Equals(error, lastSimConnectError, StringComparison.Ordinal))
             {
-                if (simulator == null)
-                {
-                    if (simConnected || !String.IsNullOrEmpty(simConnect.RuntimePath)) simConnect.UnloadRuntime();
-                    simConnected = false;
-                    nextSimConnectSearchAt = DateTime.MinValue;
-                    return;
-                }
-
-                if (simConnected) return;
-                if (DateTime.Now >= nextSimConnectSearchAt)
-                {
-                    FindAndLoadSimConnectRuntime(simulator);
-                    nextSimConnectSearchAt = DateTime.Now.AddSeconds(30);
-                }
-                simConnected = simConnect.Connect();
-            }
-        }
-
-        private bool FindAndLoadSimConnectRuntime(Process simulator)
-        {
-            List<string> candidateDirectories = new List<string>();
-            candidateDirectories.Add(Paths.ApplicationDirectory);
-            try
-            {
-                if (simulator.MainModule != null && !String.IsNullOrEmpty(simulator.MainModule.FileName))
-                    candidateDirectories.Add(Path.GetDirectoryName(simulator.MainModule.FileName));
-            }
-            catch { }
-
-            string sdkPath = Environment.GetEnvironmentVariable("MSFS_SDK");
-            if (!String.IsNullOrEmpty(sdkPath))
-            {
-                candidateDirectories.Add(Path.Combine(sdkPath, "SimConnect SDK", "lib"));
-                candidateDirectories.Add(Path.Combine(sdkPath, "SimConnect SDK", "lib", "managed"));
-            }
-            candidateDirectories.Add(@"C:\MSFS SDK\SimConnect SDK\lib");
-
-            List<string> candidatePaths = new List<string>();
-            if (!String.IsNullOrEmpty(settings.SimConnectPath) && File.Exists(settings.SimConnectPath))
-                candidatePaths.Add(settings.SimConnectPath);
-
-            string[] names = { "SimConnect.dll", "SimConnect_MSFS_2024.dll", "simconnect_msfs_2024.dll" };
-            for (int directoryIndex = 0; directoryIndex < candidateDirectories.Count; directoryIndex++)
-            {
-                string directory = candidateDirectories[directoryIndex];
-                if (String.IsNullOrEmpty(directory)) continue;
-                for (int nameIndex = 0; nameIndex < names.Length; nameIndex++)
-                {
-                    string path = Path.Combine(directory, names[nameIndex]);
-                    if (File.Exists(path)) AddUniquePath(candidatePaths, path);
-                }
-            }
-
-            for (int i = 0; i < candidatePaths.Count; i++)
-            {
-                if (simConnect.LoadRuntime(candidatePaths[i]))
-                {
-                    settings.SimConnectPath = candidatePaths[i];
-                    settings.Save();
-                    Logger.Write("Loaded SimConnect runtime: " + candidatePaths[i]);
-                    return true;
-                }
-            }
-
-            simConnect.Connect();
-            return false;
-        }
-
-        private static void AddUniquePath(List<string> list, string path)
-        {
-            for (int i = 0; i < list.Count; i++)
-            {
-                if (String.Equals(list[i], path, StringComparison.OrdinalIgnoreCase)) return;
-            }
-            list.Add(path);
-        }
-
-        private void SelectSimConnectRuntime()
-        {
-            using (OpenFileDialog picker = new OpenFileDialog())
-            {
-                picker.Title = "Select the native MSFS 2024 SimConnect runtime";
-                picker.Filter = "SimConnect runtime (SimConnect*.dll)|SimConnect*.dll|DLL files (*.dll)|*.dll";
-                if (picker.ShowDialog(this) != DialogResult.OK) return;
-
-                simConnect.UnloadRuntime();
-                simConnected = false;
-                if (simConnect.LoadRuntime(picker.FileName))
-                {
-                    settings.SimConnectPath = picker.FileName;
-                    settings.Save();
-                    nextSimConnectSearchAt = DateTime.MinValue;
-                    ShowTrayMessage("SimConnect runtime location saved.", ToolTipIcon.Info);
-                }
-                else ShowTrayMessage(simConnect.LastError, ToolTipIcon.Error);
+                lastSimConnectError = error;
+                if (!String.IsNullOrEmpty(error)) Logger.Write(error);
             }
         }
 
         private void InvokeCleanup(bool scheduled)
         {
             if (isCleaning || (scheduled && !settings.AutomaticCleaningEnabled)) return;
+            UpdateSimConnectState();
             if (!simConnected)
             {
                 nextCleanupAt = null;
@@ -489,6 +401,12 @@ namespace NocturneMemoryHelper
             {
                 if (!TaskSchedulerManager.EnsureAuthorized(false, this))
                     throw new InvalidOperationException("The elevated cleanup worker is not authorized.");
+
+                // UAC can keep the dialog open while MSFS exits. Recheck the
+                // actual connection after authorization, before approving work.
+                UpdateSimConnectState();
+                if (!simConnected)
+                    throw new InvalidOperationException("SimConnect disconnected; cleanup was not started.");
 
                 currentRunId = Guid.NewGuid().ToString("N");
                 cleanupStartedAt = DateTime.Now;
@@ -715,7 +633,7 @@ namespace NocturneMemoryHelper
         {
             allowExit = true;
             uiTimer.Stop();
-            simConnect.UnloadRuntime();
+            simConnect.Disconnect();
             trayIcon.Visible = false;
             Close();
         }

@@ -8,7 +8,7 @@ namespace NocturneMemoryHelper
 {
     internal static class Program
     {
-        internal const string AppName = "Nocturne MSFS Memory Helper 1.5.3 RC";
+        internal const string AppName = "Nocturne MSFS Memory Helper 1.5.4 RC";
         internal const string MutexName = "Local\\NocturneMSFSMemoryHelper.UI";
 
         [STAThread]

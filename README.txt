@@ -1,4 +1,4 @@
-NOCTURNE MSFS MEMORY HELPER 1.5.3 RC
+NOCTURNE MSFS MEMORY HELPER 1.5.4 RC
 ===================================
 
 Nocturne MSFS Memory Helper (NMMH) is a lightweight Windows tray utility for
@@ -81,30 +81,31 @@ UAC prompts. The same EXE performs the normal tray, worker and watcher roles;
 there are no extracted worker scripts or hidden payloads.
 
 
-SimConnect runtime location
---------------------------
+SIMCONNECT CONNECTION
+---------------------
 
-NMMH uses SimConnect to confirm that MSFS is running before allowing a cleanup.
+NMMH 1.5.4 connects directly to MSFS 2024's local SimConnect service. You do not
+need to install the SDK, find a DLL, or select your simulator installation.
+Steam and Microsoft Store installation paths do not affect this connection.
 
-If NMMH displays:
+NMMH verifies that the local pipe belongs to the detected simulator, receives
+its SimConnect OPEN reply, and checks replies to read-only heartbeat requests.
+It does not read or write the simulator's process memory.
 
-`MSFS detected - SimConnect runtime not found`
+If the status says "waiting for SimConnect", let MSFS finish starting. If it
+continues waiting, check the cleanup log, restart NMMH and MSFS, and report the
+exact status text. Do not download random SimConnect DLLs or copy SDK files.
+The standard local SimConnect pipe must be available; remote/custom network
+connections are not supported. A missing or unresponsive connection keeps
+cleaning locked. NMMH automatically retries after a disconnect.
 
-right-click the NMMH tray icon and select **Select SimConnect runtime…**
+Old saved DLL paths are ignored. After upgrading, exit the old NMMH version
+before starting this EXE. Because its path/name has changed, the first cleanup
+may ask for administrator approval again to update the scheduled worker.
 
-The default SimConnect location is:
-
-`C:\MSFS 2024 SDK\SimConnect SDK\lib\SimConnect.dll`
-
-If your MSFS installation or SDK components are stored somewhere else, navigate to that installation and locate:
-
-`SimConnect SDK\lib\SimConnect.dll`
-
-Select the native `SimConnect.dll` directly inside the `lib` folder. Do not select a DLL from the `lib\managed` folder.
-
-NMMH will save the selected location. With MSFS running, the status should then change to:
-
-`SimConnect connected`
+The new connection implementation has automated protocol and local-pipe
+tests. Live MSFS testing of this version still needs confirmation; the earlier
+stress-testing results describe the unchanged cleanup operations.
 
 
 QUICK START
@@ -112,7 +113,7 @@ QUICK START
 
   1. Extract the complete release folder to a permanent location.
   2. Read this README before using the utility.
-  3. Run Nocturne-MSFS-Memory-Helper-1.5.3-RC.exe.
+  3. Run Nocturne-MSFS-Memory-Helper-1.5.4-RC.exe.
   4. Start MSFS 2024 and wait for NMMH to report SimConnect connected.
   5. Use Clean now, or enable automatic cleaning and choose an interval.
 

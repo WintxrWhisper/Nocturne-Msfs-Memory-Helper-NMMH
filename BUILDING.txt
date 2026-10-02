@@ -1,4 +1,4 @@
-BUILDING NMMH 1.5.3 RC
+BUILDING NMMH 1.5.4 RC
 ======================
 
 This source package builds with the C# compiler included with Microsoft's
@@ -15,3 +15,7 @@ bundle any PowerShell/VBS scripts.
 
 If the compiler is missing, enable or repair .NET Framework 4.8 in Windows and
 run Build-NMMH.cmd again.
+
+Run Test-NMMH.cmd to compile and execute the connection tests. These tests
+use their own local pipe server and never perform memory-cleaning operations.
+The program itself needs no SimConnect DLL or SDK installation.
