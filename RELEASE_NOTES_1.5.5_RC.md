@@ -1,32 +1,21 @@
 # Nocturne MSFS Memory Helper 1.5.5 RC
 
-Fixes the incorrect SimConnect handshake in 1.5.4 RC.
+This release fixes the DLL-free SimConnect connection. NMMH now connects to MSFS 2024 without asking you to install the SDK or find a SimConnect DLL. I have confirmed it connects on my own system.
 
-The previous build mixed an FSX version-4 header and identifier with MSFS 2024
-version metadata, then rejected replies whose server version was not 4.
-It passed simulated tests because those tests repeated the same assumption.
+The two-pass memory cleanup is unchanged. Cleaning still requires a live SimConnect connection, and automatic cleaning starts disabled.
 
-This build sends the MSFS 2024 SunRise version-6 handshake with the RS identifier.
-Incoming server versions are checked independently, and unsupported-version
-errors now show the actual version, packet size, and response ID. Connection logs
-also include the reported simulator and SimConnect versions and the failed stage.
+## Updating
 
-Server-PID verification, MSFS 2024 identity checks, matching read-only heartbeats,
-disconnect locking, and automatic cleaning initially disabled remain in place.
-The two-pass cleaning operations are unchanged. No SDK or SimConnect DLL is needed.
+Exit the old version before opening this one. The first cleanup may ask for administrator approval again because the worker's EXE location has changed.
 
-## Upgrade and verification
+If it keeps waiting for SimConnect, include the cleanup-log messages in your report. The log now gives more useful connection details.
 
-Exit the old NMMH version before launching this EXE. The first cleanup may ask for
-administrator approval again because the worker executable path changes.
+## Antivirus warning
 
-The Windows workflow builds the executable and runs updated protocol and local
-pipe tests. These are simulated-server tests, not tests against a running MSFS.
-Live confirmation of this fix is still required.
+Microsoft has flagged a build as `Trojan:Win32/Wacatac.C!ml`. I believe this is a false positive. NMMH uses Windows memory-management functions and an elevated cleanup worker; it does not inject into MSFS, download other programs or contain hidden scripts.
 
-If connection still fails, provide the new cleanup-log lines. They now distinguish
-OPEN failures from heartbeat failures and include the actual unsupported header
-values when applicable.
+The full source is available if you want to inspect it or compile your own copy. [Here is the VirusTotal report](https://www.virustotal.com/gui/file/0a66e18f023d811e3e52e2fc92b7f61d55a65623b6add1035f2ec944506fe095). That scan is for a different-hash build from the GitHub-built EXE, so check the file you have against `SHA256SUMS.txt` rather than assuming one scan covers every copy.
 
-Save important work and read the included README before cleaning. Previous
-VirusTotal reports do not cover this new executable.
+More information is in [SECURITY.md](https://github.com/WintxrWhisper/Nocturne-Msfs-Memory-Helper-NMMH/blob/main/SECURITY.md). The download itself has not been replaced.
+
+Save important work and read the included README before cleaning. Cleanup affects Windows memory system-wide and can cause brief repaging stutters.

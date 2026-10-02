@@ -64,6 +64,8 @@ jobs:
           gh release view v1.5.5-rc *> $null
           if ($LASTEXITCODE -eq 0) {
             Write-Host 'Release already exists; leaving its original assets unchanged.'
+            gh release edit v1.5.5-rc --notes-file RELEASE_NOTES_1.5.5_RC.md
+            if ($LASTEXITCODE -ne 0) { throw 'Release notes update failed.' }
           } else {
             gh release create v1.5.5-rc release/Nocturne-MSFS-Memory-Helper-1.5.5-RC.zip release/SHA256SUMS.txt --title "Nocturne MSFS Memory Helper 1.5.5 RC" --notes-file RELEASE_NOTES_1.5.5_RC.md --prerelease --target ${{ github.sha }}
             if ($LASTEXITCODE -ne 0) { throw 'Release publishing failed.' }

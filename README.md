@@ -4,7 +4,7 @@ Nocturne MSFS Memory Helper—or **NMMH**—is a lightweight Windows tray utilit
 
 It was created to reduce the performance degradation I experience as physical system memory becomes crowded. This pressure can begin during initial simulator startup, while loading into an aircraft, or whenever MSFS loads new scenery, airports, traffic, camera views, or other assets.
 
-> **Release status:** 1.5.5 RC corrects the DLL-free SimConnect handshake after 1.5.4 failed live connection testing. No SDK or SimConnect DLL setup is needed. Its new connection code has automated protocol and local-pipe tests; live MSFS testing of this version still needs confirmation. The unchanged cleanup operations were extensively tested on my own system, not on every hardware, software, add-on, or streaming configuration.
+> **Release status:** 1.5.5 RC connects to MSFS 2024 without needing a separate SimConnect DLL or SDK setup. It is working on my system, but I cannot promise the same results on every hardware, add-on or streaming configuration.
 
 ## Interface
 
@@ -59,7 +59,11 @@ Cleaning is disabled without a live SimConnect connection. The elevated worker a
 
 [Download Nocturne MSFS Memory Helper 1.5.5 RC](https://github.com/WintxrWhisper/Nocturne-Msfs-Memory-Helper-NMMH/releases/download/v1.5.5-rc/Nocturne-MSFS-Memory-Helper-1.5.5-RC.zip), extract the complete folder to a permanent location, and read the included `README.txt` before running NMMH.
 
-The **previous 1.5.3 RC executable** can be checked in [its VirusTotal report](https://www.virustotal.com/gui/file/6b400ff8c66dc3b763cea65fd11d2417691198be8154e0de9cfbb34ac94edf0a). That report does **not** cover 1.5.5 RC. It is tied to the old EXE's SHA-256: `6b400ff8c66dc3b763cea65fd11d2417691198be8154e0de9cfbb34ac94edf0a`.
+### Antivirus notice — 1.5.5 RC
+
+Microsoft has flagged a build as `Trojan:Win32/Wacatac.C!ml`. I believe this is a false positive. NMMH uses Windows memory-management functions and asks for administrator approval to set up its cleanup worker. It does not inject code into MSFS, download other programs or contain hidden scripts.
+
+The full source and build instructions are here if you want to check it yourself or compile your own copy. [Here is the VirusTotal report](https://www.virustotal.com/gui/file/0a66e18f023d811e3e52e2fc92b7f61d55a65623b6add1035f2ec944506fe095). Scan results apply to the exact file hash, so check yours against the release's `SHA256SUMS.txt`. More details are in [SECURITY.md](SECURITY.md).
 
 The first cleanup requests administrator approval once. NMMH then registers its elevated cleanup worker so later cleanups do not produce recurring UAC prompts. Keep the EXE in the same location after authorization because the scheduled tasks point to that exact path.
 
