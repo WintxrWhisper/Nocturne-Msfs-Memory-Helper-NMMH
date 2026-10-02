@@ -81,6 +81,32 @@ UAC prompts. The same EXE performs the normal tray, worker and watcher roles;
 there are no extracted worker scripts or hidden payloads.
 
 
+SimConnect runtime location
+--------------------------
+
+NMMH uses SimConnect to confirm that MSFS is running before allowing a cleanup.
+
+If NMMH displays:
+
+`MSFS detected - SimConnect runtime not found`
+
+right-click the NMMH tray icon and select **Select SimConnect runtime…**
+
+The default SimConnect location is:
+
+`C:\MSFS 2024 SDK\SimConnect SDK\lib\SimConnect.dll`
+
+If your MSFS installation or SDK components are stored somewhere else, navigate to that installation and locate:
+
+`SimConnect SDK\lib\SimConnect.dll`
+
+Select the native `SimConnect.dll` directly inside the `lib` folder. Do not select a DLL from the `lib\managed` folder.
+
+NMMH will save the selected location. With MSFS running, the status should then change to:
+
+`SimConnect connected`
+
+
 QUICK START
 -----------
 
