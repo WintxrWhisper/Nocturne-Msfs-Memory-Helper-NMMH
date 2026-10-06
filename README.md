@@ -101,6 +101,12 @@ Useful reports include hardware, installed RAM, aircraft, add-ons, whether world
 
 Regular updates and individual support are not guaranteed. If NMMH remains stable and continues doing its job, there may simply be nothing that needs updating.
 
+## Kofi
+
+i do not like to really take money for my work , i like that people benefit but, if you feel inclined, 
+
+<a href='https://ko-fi.com/D6D728BUNE' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi3.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+
 ## License
 
 NMMH is released under the [MIT License](LICENSE).
