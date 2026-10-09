@@ -97,15 +97,8 @@ See [BUILDING.txt](BUILDING.txt) for the compact build instructions and [README.
 
 ## Reports and updates
 
-Useful reports include hardware, installed RAM, aircraft, add-ons, whether world content is local or streamed, memory figures before and after cleaning, the flight phase, and any hitch, crash, instability, or lack of improvement.
+i will not be monotring reports, or any more infromation, if an update is needed, it will happen, otherwise, it will live as is, im tired of finding probelms only to be talked down to because of my ablity to type, and asstance with an ai for my spelling and launage. so. whatever. enjoy it, if i update it, then cool, otherwise, enjoy it while it works. 
 
-Regular updates and individual support are not guaranteed. If NMMH remains stable and continues doing its job, there may simply be nothing that needs updating.
-
-## Kofi
-
-i do not like to really take money for my work , i like that people benefit but, if you feel inclined, 
-
-<a href='https://ko-fi.com/D6D728BUNE' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi3.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
 
 ## License
 
